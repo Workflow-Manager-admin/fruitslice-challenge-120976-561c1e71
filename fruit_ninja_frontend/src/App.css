@@ -1,0 +1,36 @@
+:root {
+  --primary: #4caf50;
+  --accent: #e91e63;
+  --secondary: #ffc107;
+  --fruit-bg: #f0fff7;
+  --text-primary: #222;
+  --scorebar-bg: #fff;
+}
+
+html,
+body,
+.fruitninja-app {
+  background: #fff;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+.fruitninja-app {
+  min-height: 100vh;
+  width: 100vw;
+  font-family: "Segoe UI", Verdana, Geneva, Tahoma, sans-serif;
+  /* vanish tap/drag blue highlight for mobile */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  -user-select: none;
+  outline: none;
+}
+
+canvas:focus {
+  outline: none !important;
+}
+canvas {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
