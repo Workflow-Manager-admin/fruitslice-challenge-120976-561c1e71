@@ -100,6 +100,9 @@ function App() {
   const [gameTime, setGameTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  // Timer-specific
+  const [timerSecondsLeft, setTimerSecondsLeft] = useState(GAME_DURATION);
+  const timerIntervalRef = useRef();
 
   // Canvas & resize
   const canvasRef = useRef(null);
@@ -181,21 +184,30 @@ function App() {
   }, [isPlaying, canvasDims, gameOver]);
 
   // PUBLIC_INTERFACE
-  // Game timer
+  // TIMER MODE: Countdown countdown for game session
   useEffect(() => {
     if (!isPlaying) return;
-    setGameTime(0);
-    timeIntervalRef.current = setInterval(() => {
-      setGameTime((t) => {
-        if (t + 1 >= GAME_DURATION) {
+    setTimerSecondsLeft(GAME_DURATION);
+    setGameTime(0); // also zero for backwards compat with legacy fields.
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    timerIntervalRef.current = setInterval(() => {
+      setTimerSecondsLeft((prev) => {
+        if (prev <= 1) {
           handleGameOver();
-          clearInterval(timeIntervalRef.current);
-          return GAME_DURATION;
+          clearInterval(timerIntervalRef.current);
+          return 0;
         }
-        return t + 1;
+        return prev - 1;
+      });
+      setGameTime((old) => {
+        // For any legacy code depending on gameTime to update screen
+        if (old + 1 > GAME_DURATION) return GAME_DURATION;
+        return old + 1;
       });
     }, 1000);
-    return () => clearInterval(timeIntervalRef.current);
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    };
     // eslint-disable-next-line
   }, [isPlaying, gameOver]);
 
@@ -208,12 +220,14 @@ function App() {
     setIsPlaying(true);
     setShowLeaderboard(false);
     setGameTime(0);
+    setTimerSecondsLeft(GAME_DURATION);
   }
 
   // PUBLIC_INTERFACE
   function handleGameOver() {
     setIsPlaying(false);
     setGameOver(true);
+    setTimerSecondsLeft(0);
     // Save to leaderboard
     const newLeaderboard = [...highScores, { score, date: Date.now() }]
       .sort((a, b) => b.score - a.score)
@@ -743,10 +757,19 @@ function App() {
                     fontWeight: 900,
                     letterSpacing: "-0.04em",
                     marginBottom: 12,
+                    color: timerSecondsLeft === 0 ? COLORS.accent : COLORS.primary
                   }}
                 >
                   Game Over
                 </div>
+                {timerSecondsLeft === 0 && (
+                  <div style={{
+                    color: "#E91E63", fontSize: 21, fontWeight: 800, marginBottom: 4,
+                    textShadow: "0 2px 12px #E91E6333"
+                  }}>
+                    <span role="img" aria-label="alarm">⏰</span>&nbsp;Time's Up!
+                  </div>
+                )}
                 <div
                   style={{
                     fontSize: 22,
